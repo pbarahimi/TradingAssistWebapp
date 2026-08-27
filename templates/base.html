@@ -1,0 +1,29 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js"></script>
+</head>
+
+<body>
+    <button id="darkToggle">Dark Mode</button>
+
+    <nav>
+        <ul>
+            {% for page in pages %}
+                <li><a href="/page/{{ page }}">{{ page.capitalize() }}</a></li>
+            {% endfor %}
+            <li><a href="/chart">PnL Chart</a></li>
+        </ul>
+    </nav>
+
+    <div id="content">
+        {{ content|safe }}
+    </div>
+
+    <script>
+        const evt = new EventSource("/events");
+        evt.onmessage = () => location.reload();
+    </script>
+</body>
+</html>
