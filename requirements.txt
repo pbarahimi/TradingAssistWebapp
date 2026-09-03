@@ -1,3 +1,5 @@
 charts           0.4.6
 plotly           7.0.0
 watchdog         6.0.0
+markdown         3.10.3
+flask
