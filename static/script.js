@@ -1,41 +1,72 @@
 // Sortable tables
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("table").forEach(table => {
-        const headers = table.querySelectorAll("th");
-        headers.forEach((header, index) => {
-            header.style.cursor = "pointer";
-            header.addEventListener("click", () => sortTable(table, index));
-        });
+// document.addEventListener("DOMContentLoaded", () => {
+//     document.querySelectorAll("table").forEach(table => {
+//         const headers = table.querySelectorAll("th");
+//         headers.forEach((header, index) => {
+//             header.style.cursor = "pointer";
+//             // header.addEventListener("click", () => sortTable(table, index));
+//         });
+//     });
+
+//     // Dark mode
+//     const btn = document.getElementById("darkToggle");
+//     btn.addEventListener("click", () => {
+//         document.body.classList.toggle("dark");
+//         localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+//     });
+
+//     if (localStorage.getItem("darkMode") === "true") {
+//         document.body.classList.add("dark");
+//     }
+
+//     // Update PnL column formatting
+//     formatPnlColumns();
+// });
+
+const evt = new EventSource("/events");
+
+evt.onmessage = async () => {
+    console.log("Change detected — updating tables…");
+
+    // Fetch updated page HTML
+    const res = await fetch(window.location.href, {
+        cache: "no-store"
+    });
+    const text = await res.text();
+
+    // Parse the HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, "text/html");
+
+    // Extract new tables from the updated page
+    const newTables = doc.querySelectorAll("table");
+    const oldTables = document.querySelectorAll("table");
+
+    // Replace old tables with new ones
+    oldTables.forEach((oldTable, i) => {
+        if (newTables[i]) {
+            oldTable.replaceWith(newTables[i]);
+        }
     });
 
-    // Dark mode
-    const btn = document.getElementById("darkToggle");
-    btn.addEventListener("click", () => {
-        document.body.classList.toggle("dark");
-        localStorage.setItem("darkMode", document.body.classList.contains("dark"));
-    });
-
-    if (localStorage.getItem("darkMode") === "true") {
-        document.body.classList.add("dark");
-    }
-
-    // Update PnL column formatting
+    // Re-run your formatting + sorting
     formatPnlColumns();
-});
+    makeTablesSortable();
+};
 
-function sortTable(table, colIndex) {
-    const rows = Array.from(table.querySelectorAll("tbody tr"));
-    const isNumeric = rows.every(row => !isNaN(row.children[colIndex].innerText));
+// function sortTable(table, colIndex) {
+//     const rows = Array.from(table.querySelectorAll("tbody tr"));
+//     const isNumeric = rows.every(row => !isNaN(row.children[colIndex].innerText));
 
-    rows.sort((a, b) => {
-        const A = a.children[colIndex].innerText;
-        const B = b.children[colIndex].innerText;
-        return isNumeric ? Number(A) - Number(B) : A.localeCompare(B);
-    });
+//     rows.sort((a, b) => {
+//         const A = a.children[colIndex].innerText;
+//         const B = b.children[colIndex].innerText;
+//         return isNumeric ? Number(A) - Number(B) : A.localeCompare(B);
+//     });
 
-    const tbody = table.querySelector("tbody");
-    rows.forEach(row => tbody.appendChild(row));
-}
+//     const tbody = table.querySelector("tbody");
+//     rows.forEach(row => tbody.appendChild(row));
+// }
 
 function formatPnlColumns() {
     document.querySelectorAll("table").forEach(table => {
@@ -68,3 +99,12 @@ function formatPnlColumns() {
         });
     });
 }
+
+
+const themeToggle = document.getElementById("themeToggle");
+
+themeToggle.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-bs-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-bs-theme", newTheme);
+});

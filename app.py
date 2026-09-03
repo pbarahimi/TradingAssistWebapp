@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from markupsafe import Markup
 import markdown
 import os
+import time
 
 from mycharts.pnl_chart import generate_pnl_chart
 
@@ -23,21 +24,29 @@ def render_md(filename):
         md = f.read()
     return markdown.markdown(md, extensions=["fenced_code", "tables"])
 
+def render_html(filename):
+    path = os.path.join(PAGES_DIR, filename)
+    with open(path) as f:
+        html = f.read()
+    return html
+    
 @app.route("/")
 def index():
-    pages = [f.replace(".md", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".md")]
+    pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
     return render_template("base.html", pages=pages, content="<h2>Select a page</h2>")
 
 @app.route("/page/<name>")
 def page(name):
-    filename = f"{name.replace(" ", "_")}.md"
-    html = render_md(filename)
-    pages = [f.replace(".md", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".md")]
-    return render_template("base.html", pages=pages, content=Markup(html))
-
+    filename = f"{name.replace(" ", "_")}.html"
+    path = os.path.join(PAGES_DIR, filename)
+    with open(path) as f:
+        html = f.read()
+    pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
+    return render_template("base.html", content=Markup(html), pages=pages)
+    
 @app.route("/chart")
 def chart():
-    pages = [f.replace(".md", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".md")]
+    pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
     chart_html = generate_pnl_chart()
     return render_template("base.html", pages=pages, content=Markup(chart_html))
 
@@ -57,6 +66,7 @@ def events():
             while True:
                 msg = q.get()
                 yield f"data: {msg}\n\n"
+                # time.sleep(1)
         finally:
             clients.remove(q)
     return Response(stream(), mimetype="text/event-stream")

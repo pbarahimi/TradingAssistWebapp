@@ -1,22 +1,16 @@
-body {
-    max-width: 900px;
-    margin: 20px;
-    font-family: Arial;
+/* Change the color of the Dark mode toggle button */
+[data-bs-theme="dark"] .btn {
+    color: black;
+    background-color: #00e6e6;
 }
 
-nav ul {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    gap: 15px;
+[data-bs-theme="light"] .btn {
+    color: black;
+    background-color: #00e6e6;
 }
 
-nav a {
-    text-decoration: none;
-    color: #007bff;
-}
-
-#darkToggle {
+/* Dark model button styling */
+#themeToggle {
     position: fixed;
     top: 15px;
     right: 15px;
@@ -24,68 +18,40 @@ nav a {
     cursor: pointer;
 }
 
-/* Dark mode */
-body.dark {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
+/* Change the font color of the tabs in dar mode */
+[data-bs-theme="dark"] a {
+  color: #00e6e6; /* Light cyan - easier to see on dark backgrounds */
 }
 
-body.dark a {
-    color: #80bfff;
+[data-bs-theme="dark"] a:hover {
+  color: #80ffff; /* Slightly lighter on hover */
 }
 
-/* Tables */
-table {
-    float: left;
-    margin-right: 25px;
-    margin-bottom: 25px;
-    border-collapse: collapse;
+/* Tabs slyling */
+nav ul {
+    list-style: none;
+    padding: 10;
+    margin: 5;
+    font-weight: bold;
 }
 
-table, th, td {
-    border: 1px solid #ccc;
+nav li {
+    display: inline;
+    border: solid;
+    border-width: 1px 3px 0 1px;
+    margin: 0 -1px 0 0;
+    padding: 10px;
+    /* background-color: #d1fff0d6; */
+    border-radius: 10px 10px 0px 0;
 }
 
-thead th {
-    background-color: #f2f2f2;
-    position: sticky;
-    top: 0;
+/* Float the tables to left and adjust width to fit content */
+.table-container {
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 20px;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #fafafa;
+#dataTable {
+    width: auto;
 }
-
-tbody tr:hover {
-    background-color: #f0f0f0;
-}
-
-/* Dark mode table styling */
-body.dark table {
-    border-color: #555;
-}
-
-body.dark thead th {
-    background-color: #2d2d2d;
-    color: #e6e6e6;
-}
-
-/* Alternating row colors for dark mode */
-body.dark tbody tr:nth-child(odd) {
-    background-color: #1f1f1f;
-    color: #e0e0e0;
-}
-
-body.dark tbody tr:nth-child(even) {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-}
-
-/* Hover effect in dark mode */
-body.dark tbody tr:hover {
-    background-color: #3a3a3a;
-    color: #ffffff;
-}
-
-
-
