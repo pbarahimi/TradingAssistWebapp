@@ -1,72 +1,28 @@
-// Sortable tables
-// document.addEventListener("DOMContentLoaded", () => {
-//     document.querySelectorAll("table").forEach(table => {
-//         const headers = table.querySelectorAll("th");
-//         headers.forEach((header, index) => {
-//             header.style.cursor = "pointer";
-//             // header.addEventListener("click", () => sortTable(table, index));
-//         });
-//     });
+document.addEventListener("DOMContentLoaded", () => {
+    const socket = io({ managerOptions: { debug: true } });
+    
+    socket.on("file_changed", async (data) => {
+        console.log("FILE_CHANGED RECEIVED:", data);
+        
+        if (data.page.replaceAll("_", " ").replace(".html", "") !== CURRENT_PAGE) return;
+        console.log("Attempt to replace");
+        const res = await fetch(window.location.href, { cache: "no-store" });
+        const text = await res.text();
 
-//     // Dark mode
-//     const btn = document.getElementById("darkToggle");
-//     btn.addEventListener("click", () => {
-//         document.body.classList.toggle("dark");
-//         localStorage.setItem("darkMode", document.body.classList.contains("dark"));
-//     });
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/html");
 
-//     if (localStorage.getItem("darkMode") === "true") {
-//         document.body.classList.add("dark");
-//     }
+        const newTables = doc.querySelectorAll("table");
+        const oldTables = document.querySelectorAll("table");
 
-//     // Update PnL column formatting
-//     formatPnlColumns();
-// });
+        oldTables.forEach((oldTable, i) => {
+            if (newTables[i]) {oldTable.replaceWith(newTables[i]);}
+        });
 
-const evt = new EventSource("/events");
-
-evt.onmessage = async () => {
-    console.log("Change detected — updating tables…");
-
-    // Fetch updated page HTML
-    const res = await fetch(window.location.href, {
-        cache: "no-store"
+        formatPnlColumns();
+        // makeTablesSortable();
     });
-    const text = await res.text();
-
-    // Parse the HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "text/html");
-
-    // Extract new tables from the updated page
-    const newTables = doc.querySelectorAll("table");
-    const oldTables = document.querySelectorAll("table");
-
-    // Replace old tables with new ones
-    oldTables.forEach((oldTable, i) => {
-        if (newTables[i]) {
-            oldTable.replaceWith(newTables[i]);
-        }
-    });
-
-    // Re-run your formatting + sorting
-    formatPnlColumns();
-    makeTablesSortable();
-};
-
-// function sortTable(table, colIndex) {
-//     const rows = Array.from(table.querySelectorAll("tbody tr"));
-//     const isNumeric = rows.every(row => !isNaN(row.children[colIndex].innerText));
-
-//     rows.sort((a, b) => {
-//         const A = a.children[colIndex].innerText;
-//         const B = b.children[colIndex].innerText;
-//         return isNumeric ? Number(A) - Number(B) : A.localeCompare(B);
-//     });
-
-//     const tbody = table.querySelector("tbody");
-//     rows.forEach(row => tbody.appendChild(row));
-// }
+});
 
 function formatPnlColumns() {
     document.querySelectorAll("table").forEach(table => {
@@ -99,12 +55,3 @@ function formatPnlColumns() {
         });
     });
 }
-
-
-const themeToggle = document.getElementById("themeToggle");
-
-themeToggle.addEventListener("click", () => {
-    const currentTheme = document.documentElement.getAttribute("data-bs-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-bs-theme", newTheme);
-});

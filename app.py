@@ -1,16 +1,18 @@
 from flask import Flask, render_template
 from markupsafe import Markup
+from gevent import monkey
+from flask_socketio import SocketIO
 import markdown
 import os
 import time
+import threading
+from flask import Response
 
 from mycharts.pnl_chart import generate_pnl_chart
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from flask import Response
-
 app = Flask(__name__)
+monkey.patch_all()
+socketio = SocketIO(app, async_mode='gevent', logger=True, engineio_logger=True) #cors_allowed_origins="*")
 
 PAGES_DIR = "pages"
 clients = []
@@ -42,7 +44,7 @@ def page(name):
     with open(path) as f:
         html = f.read()
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
-    return render_template("base.html", content=Markup(html), pages=pages)
+    return render_template("base.html", content=Markup(html), pages=pages, page=name)
     
 @app.route("/chart")
 def chart():
@@ -50,30 +52,32 @@ def chart():
     chart_html = generate_pnl_chart()
     return render_template("base.html", pages=pages, content=Markup(chart_html))
 
-# --- Live Reload (SSE) ---
-class ChangeHandler(FileSystemEventHandler):
-    def on_modified(self, event):
-        for q in clients:
-            q.put("reload")
+def watch_files():
+    last_mtimes = {}
 
-@app.route("/events")
-def events():
-    def stream():
-        from queue import Queue
-        q = Queue()
-        clients.append(q)
-        try:
-            while True:
-                msg = q.get()
-                yield f"data: {msg}\n\n"
-                # time.sleep(1)
-        finally:
-            clients.remove(q)
-    return Response(stream(), mimetype="text/event-stream")
+    while True:
+        # print('Testing for file changes')
+        for filename in os.listdir(PAGES_DIR):
+            if not filename.endswith(".html"):
+                continue
 
-observer = Observer()
-observer.schedule(ChangeHandler(), path=PAGES_DIR, recursive=True)
-observer.start()
+            path = os.path.join(PAGES_DIR, filename)
+            mtime = os.path.getmtime(path)
+
+            if filename not in last_mtimes:
+                last_mtimes[filename] = mtime
+            elif mtime != last_mtimes[filename]:
+                last_mtimes[filename] = mtime
+
+                # Notify browser that THIS file changed
+                socketio.emit("file_changed", {"page": filename})
+        time.sleep(2)
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    threading.Thread(target=watch_files, daemon=True).start()
+    socketio.run(app,
+                 host="0.0.0.0",
+                 port=5000,
+                 debug=False
+                )
