@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn instance for Flask SocketIO App
+After=network.target
+
+[Service]
+User=pbarahimi
+WorkingDirectory=/home/pbarahimi/Documents/TradingAssistWebapp
+ExecStart=/home/pbarahimi/Documents/TradingAssistWebapp/venv/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --bind 127.0.0.1:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
