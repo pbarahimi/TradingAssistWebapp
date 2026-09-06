@@ -1,11 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
+    formatPnlColumns()
+
     const socket = io({ managerOptions: { debug: true } });
     
     socket.on("file_changed", async (data) => {
-        console.log("FILE_CHANGED RECEIVED:", data);
+       // console.log("FILE_CHANGED RECEIVED:", data);
         
         if (data.page.replaceAll("_", " ").replace(".html", "") !== CURRENT_PAGE) return;
-        console.log("Attempt to replace");
+        // console.log("Attempt to replace");
         const res = await fetch(window.location.href, { cache: "no-store" });
         const text = await res.text();
 
@@ -46,7 +48,7 @@ function formatPnlColumns() {
 
             // Skip non-numeric rows (header rows)
             const num = Number(raw);
-            if (isNaN(num)) return;
+            if (isNaN(num) || raw=="") return;
 
             cell.innerText = num.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
