@@ -7,7 +7,7 @@ from flask import Flask, render_template, Response
 from markupsafe import Markup
 from flask_socketio import SocketIO
 import markdown
-from mycharts.pnl_chart import generate_pnl_chart
+from mycharts.equity_curve import generate_equity_curve
 
 app = Flask(__name__)
 socketio = SocketIO(
@@ -37,7 +37,7 @@ def page(name):
 @app.route("/chart")
 def chart():
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
-    chart_html = generate_pnl_chart()
+    chart_html = generate_equity_curve(False)
     return render_template("base.html", pages=pages, content=Markup(chart_html))
 
 # Gevent-safe background task for file watching
