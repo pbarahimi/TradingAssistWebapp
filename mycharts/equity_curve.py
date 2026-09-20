@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
+import plotly.graph_objects as go
+import pandas as pd
+import re
+from plotly.subplots import make_subplots
+from urllib.parse import quote
 
 def generate_equity_curve(full_html:bool=True)-> str:
-    import pandas as pd
-    import plotly.graph_objects as go
-    import re
-
-    from plotly.subplots import make_subplots
-    from urllib.parse import quote
-    
     SHEET_ID = "1HJ9h7UEtUQCXNA58UkZyPsHogJWBAcB1lNWt9nOPMR4"
 
     # Specify the tab name (optional, defaults to the first sheet)
     SHEET_NAME = "TradesCopy"
-    sql_query = "SELECT * WHERE P=1" # Query to only pull open trades
+    sql_query = "SELECT C, O, Q WHERE P=1" # Query to only pull 'Account', 'Pnl', 'Close Time' columns for open trades
     encoded_query = quote(sql_query)
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}&tq={encoded_query}"
-    num_cols = ['Open Price', 'Close Price', 'Commission','Risk ($)', 'Balance at Open', 'PnL']
+    num_cols = ['PnL']
+
 
     # Load into DataFrame read directly from the url
     df = pd.read_csv(url)
@@ -25,34 +24,8 @@ def generate_equity_curve(full_html:bool=True)-> str:
         df[c] = df[c].apply(lambda x: float(re.sub(r"\(", "-", re.sub(r"[,\)]", "", str(x))))) # Replace '(' with '-' and remove ')', ',' from the numbers to cast them to float
     df['Close Time'] = pd.to_datetime(df['Close Time'])
     df.sort_values('Close Time', inplace=True)
-
-    cols2keep = ['Account', 'PnL', 'Close Time']
-    trades = df[cols2keep].copy()
-    trades.head()
-
-
-    # Specify the tab name (optional, defaults to the first sheet)
-    SHEET_NAME = "Accounts"
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
-
-    # Load into DataFrame read directly from the url
-    df = pd.read_csv(url)
-    num_cols = ['Initial Balance', 'PnL', 'Current Balance']
-    df[num_cols] = df[num_cols].fillna('0')
-    for c in num_cols:
-        df[c] = df[c].apply(lambda x: float(re.sub(r"\(", "-", re.sub(r"[,\)]", "", str(x))))) # Replace '(' with '-' and remove ')', ',' from the numbers to cast them to float
-        
-    # Only show paper trading accounts
-    df = df[df['Account Name'].str.contains('Paper Trading')]
+    df['Balance'] = df.groupby(['Account'])['PnL'].cumsum()
     
-    accounts = df.copy()
-    accounts.head()
-    
-    # Merge trades with accounts
-    df = pd.merge(trades, accounts[['Account Name', 'Initial Balance']], left_on='Account', right_on='Account Name')
-    df['Balance'] = df.groupby(['Account Name'])['PnL'].cumsum() + df['Initial Balance']
-    df.head()
-
     # # Generate the plot
     # Setup figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -62,11 +35,11 @@ def generate_equity_curve(full_html:bool=True)-> str:
     # Each account has 2 traces: (1) Balance Line, (2) PnL Bars
     traces_per_account = 2
 
-    for i, account in enumerate(accounts):
+    for i, account in enumerate(sorted(accounts)):
         acc_df = df[df["Account"] == account].copy()
 
         # Prep data with starting baseline for line chart
-        initial_bal = acc_df["Initial Balance"].iloc[0]
+        initial_bal = 0 #acc_df["Initial Balance"].iloc[0]
         line_x = list(range(0, len(acc_df) + 1))
         line_y = [initial_bal] + acc_df["Balance"].tolist()
 
@@ -79,7 +52,7 @@ def generate_equity_curve(full_html:bool=True)-> str:
                 x=line_x,
                 y=line_y,
                 mode="lines+markers",
-                name=f"Acc {account} Balance",
+                name=f"{account} PnL",
                 visible=(i == 0),
                 line=dict(color="#49fcfe"),
                 hovertemplate="Trade: %{x}<br>Balance: $%{y:,.2f}<extra></extra>"
@@ -95,7 +68,7 @@ def generate_equity_curve(full_html:bool=True)-> str:
             go.Bar(
                 x=bar_x,
                 y=bar_y,
-                name=f"Acc {account} PnL",
+                name=f"{account} PnL",
                 marker_color=colors,
                 opacity=0.4,
                 visible=(i == 0),
@@ -108,7 +81,7 @@ def generate_equity_curve(full_html:bool=True)-> str:
     buttons = []
     total_traces = len(accounts) * traces_per_account
 
-    for i, account in enumerate(accounts):
+    for i, account in enumerate(sorted(accounts)):
         # Set visibility for pair of traces belonging to current account
         visibility = [False] * total_traces
         visibility[i * traces_per_account] = True      # Line Trace
@@ -151,7 +124,7 @@ def generate_equity_curve(full_html:bool=True)-> str:
     )
 
     # Set Y-Axes titles
-    fig.update_yaxes(title_text="Balance ($)", secondary_y=False)
+    fig.update_yaxes(title_text="Total PnL ($)", secondary_y=False)
     fig.update_yaxes(title_text="Trade PnL ($)", secondary_y=True, showgrid=False)
     
     return fig.to_html(full_html=full_html)
