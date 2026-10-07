@@ -16,7 +16,7 @@ def generate_equity_curve(full_html:bool=True)-> str:
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}&tq={encoded_query}"
     num_cols = ['PnL']
 
-
+    
     # Load into DataFrame read directly from the url
     df = pd.read_csv(url)
     df[num_cols] = df[num_cols].fillna('0')
@@ -26,6 +26,14 @@ def generate_equity_curve(full_html:bool=True)-> str:
     df.sort_values('Close Time', inplace=True)
     df['Balance'] = df.groupby(['Account'])['PnL'].cumsum()
     
+    # Filter on active trades
+    active_accounts = ['FFF001',
+                       'Tradestation - Futures',
+                       'Tradestation - Equity',
+                       'Paper Trading #1',
+                       'FTP - 149230']
+    df = df[df['Account'].isin(active_accounts)].copy()
+            
     # # Generate the plot
     # Setup figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
