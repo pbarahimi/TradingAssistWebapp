@@ -27,11 +27,10 @@ def generate_equity_curve(full_html:bool=True)-> str:
     df['Balance'] = df.groupby(['Account'])['PnL'].cumsum()
     
     # Filter on active trades
-    active_accounts = ['FFF001',
-                       'Tradestation - Futures',
+    active_accounts = ['Tradestation - Futures',
                        'Tradestation - Equity',
                        'Paper Trading #1',
-                       'FTP - 149230']
+                       'FTP - 151063']
     df = df[df['Account'].isin(active_accounts)].copy()
             
     # # Generate the plot

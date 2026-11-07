@@ -8,6 +8,7 @@ from markupsafe import Markup
 from flask_socketio import SocketIO
 import markdown
 from mycharts.equity_curve import generate_equity_curve
+from mycharts.daily_pnl_barchart import generate_daily_pnl
 
 app = Flask(__name__)
 socketio = SocketIO(
@@ -34,10 +35,17 @@ def page(name):
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
     return render_template("base.html", content=Markup(html), pages=pages, page=name)
 
-@app.route("/chart")
-def chart():
+@app.route("/equity_curve")
+def equity_curve():
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
     chart_html = generate_equity_curve(False)
+    return render_template("base.html", pages=pages, content=Markup(chart_html))
+
+
+@app.route("/daily_pnl")
+def daily_pnl():
+    pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
+    chart_html = generate_daily_pnl(False)
     return render_template("base.html", pages=pages, content=Markup(chart_html))
 
 # Gevent-safe background task for file watching
@@ -70,4 +78,4 @@ def handle_connect():
         app.watcher_started = True
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=False)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
