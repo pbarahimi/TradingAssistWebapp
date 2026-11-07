@@ -44,7 +44,7 @@ def generate_daily_pnl(full_html:bool=True)-> str:
       df_acc = df[df['Account'] == account]
 
       # Determine color for each bar: green if >= 0, red if < 0
-      bar_colors = ['green' if val >= 0 else '#ea3b3c' for val in df_acc['PnL']]
+      bar_colors = ['#26a69a' if val >= 0 else '#ef5350' for val in df_acc['PnL']]
 
       fig.add_trace(
           go.Bar(
