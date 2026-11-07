@@ -24,7 +24,12 @@ PAGES_DIR = "pages"
 @app.route("/")
 def index():
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
-    return render_template("base.html", pages=pages, content="<h2>Select a page</h2>")
+    name = 'Account Symbol Level'
+    filename = f"{name.replace(' ', '_')}.html"
+    path = os.path.join(PAGES_DIR, filename)
+    with open(path) as f:
+        html = f.read()
+    return render_template("base.html", pages=pages, content=Markup(html))
 
 @app.route("/page/<name>")
 def page(name):
