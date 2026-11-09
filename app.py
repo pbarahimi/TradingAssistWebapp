@@ -9,6 +9,7 @@ from flask_socketio import SocketIO
 import markdown
 from mycharts.equity_curve import generate_equity_curve
 from mycharts.daily_pnl_barchart import generate_daily_pnl
+from mycharts.rules import rules_met
 
 app = Flask(__name__)
 socketio = SocketIO(
@@ -52,6 +53,12 @@ def daily_pnl():
     pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
     chart_html = generate_daily_pnl(False)
     return render_template("base.html", pages=pages, content=Markup(chart_html))
+
+@app.route("/rules_compliance")
+def rules_compliance():
+    pages = [f.replace(".html", "").replace("_", " ") for f in os.listdir(PAGES_DIR) if f.endswith(".html")]
+    html = rules_met()
+    return render_template("base.html", pages=pages, content=Markup(html))
 
 # Gevent-safe background task for file watching
 def watch_files():
