@@ -57,3 +57,35 @@ function formatPnlColumns() {
         });
     });
 }
+
+/* For Rules Complinace Table - Highlight rows with any breach to Red */ 
+document.addEventListener("DOMContentLoaded", function() {
+        // Targets the table with id="myTable"
+        const rows = document.querySelectorAll("#rulesDataTable tbody tr");
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            
+            // Specify the target column indices you want to check (Column 7 and Column 8)
+            const targetIndices = [6, 7]; 
+            let shouldHighlight = false;
+
+            // Check each target column
+            for (let index of targetIndices) {
+                if (cells[index]) {
+                    const cellValue = cells[index].textContent.trim();
+                    if (cellValue === "1") {
+                        shouldHighlight = true;
+                        break; // Exit loop early as soon as a '1' is found
+                    }
+                }
+            }
+
+            // If either column has '1', highlight the entire row
+            if (shouldHighlight) {
+                console.log(row.id);
+                cells.forEach(cell => {
+                    cell.style.setProperty("background-color", "#fd4e4eab", "important");
+                });
+            }
+        });
+    });

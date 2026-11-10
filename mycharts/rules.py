@@ -130,4 +130,4 @@ def rules_met(account='FTP - 151063'):
     trades_daily['Excess Loss Limit'] = np.where(trades_daily['Daily Loss Limit Breached'], DAILY_LOSS_COUNT_LIMIT*trades_daily['Risk per Trade ($)']+trades_daily['Loss Amount'], 0)
     
     out = trades_daily.iloc[:, [0,1,4,5,2,9, 7,11,12]].sort_values('Close Date', ascending=False).head(30)
-    return(out.to_html(border=0, justify='left',  table_id='dataTable', classes='table table-striped table-hover'))
+    return(out.to_html(border=0, justify='left',  table_id='rulesDataTable', classes='table table-striped table-hover', index=False))
